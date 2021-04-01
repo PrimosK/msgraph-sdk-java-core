@@ -1,4 +1,4 @@
-include 'coreLibrary'
+// include 'coreLibrary'
 
-project(':coreLibrary').projectDir = new File("../../")
+// project(':coreLibrary').projectDir = new File("../../")
 
