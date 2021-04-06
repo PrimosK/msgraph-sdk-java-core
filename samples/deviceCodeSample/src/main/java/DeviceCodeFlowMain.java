@@ -1,10 +1,8 @@
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.identity.DeviceCodeCredentialBuilder;
-import com.microsoft.graph.authentication.BaseAuthenticationProvider;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.content.BatchRequestContent;
 import com.microsoft.graph.content.BatchResponseContent;
-import com.microsoft.graph.httpcore.HttpClients;
 import com.microsoft.graph.models.Message;
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.requests.GraphServiceClient;
@@ -12,11 +10,8 @@ import com.microsoft.graph.requests.MessageCollectionPage;
 
 import okhttp3.*;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 
 public class DeviceCodeFlowMain {
@@ -45,22 +40,17 @@ public class DeviceCodeFlowMain {
                                                     .builder()
                                                     .authenticationProvider(tokenCredAuthProvider)
                                                     .buildClient();
-        {
-            graphClient = ignoreMe();
-        }
-
         // async API
         System.out.println("Getting me (async)");
-        final CompletableFuture<Void> meAsyncGet = graphClient.me().buildRequest().getAsync().thenAccept(u -> {
+        graphClient.me().buildRequest().getAsync().thenAccept(u -> {
             System.out.println("Hello " + u.displayName + "(async)");
-        });
+        }).get();
 
         // sync API
         final User me = graphClient.me().buildRequest().get();
 
         System.out.println("Hello " + me.displayName + "(sync)");
 
-        meAsyncGet.get();
 
         // OffsetDateTime + fluent api for OData query string parameters
         final MessageCollectionPage messagesPage = graphClient.me().messages()
@@ -89,24 +79,4 @@ public class DeviceCodeFlowMain {
         final User user = batchResponseContent.getResponseById(meGetId).getDeserializedBody(User.class);
         System.out.println("Hello " + user.displayName + " (batch)");
     }
-
-    private static GraphServiceClient<Request> ignoreMe() {
-        System.console().readLine("To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code FNEBDEXUK to authenticate.");
-
-        final String tempToken = "";
-        return GraphServiceClient
-        .builder()
-        .authenticationProvider(new BaseAuthenticationProvider(){
-            @Override
-            public CompletableFuture<String> getAuthorizationTokenAsync(URL requestUrl) {
-                if(this.shouldAuthenticateRequestWithUrl(requestUrl)) {
-                    return CompletableFuture.completedFuture(tempToken);
-                } else {
-                    return CompletableFuture.completedFuture(null);
-                }
-            }
-        })
-        .buildClient();
-    }
-
 }
